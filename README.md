@@ -1,2 +1,2 @@
-VDKLib
+vdk-lib
 ======
