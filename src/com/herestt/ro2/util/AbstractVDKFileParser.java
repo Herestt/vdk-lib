@@ -5,8 +5,8 @@ import java.io.FileNotFoundException;
 
 import java.io.IOException;
 
-import com.herestt.vdk.VDK1FileInfo;
-import com.herestt.vdk.VDKFileVersion;
+import com.herestt.ro2.vdk.VDK1FileInfo;
+import com.herestt.ro2.vdk.VDKFileVersion;
 
 public abstract class AbstractVDKFileParser {
 

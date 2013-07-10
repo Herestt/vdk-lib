@@ -1,6 +1,6 @@
 package com.herestt.ro2.util;
 
-import com.herestt.vdk.VDK1FileInfo;
+import com.herestt.ro2.vdk.VDK1FileInfo;
 
 public class VDK0FileParser extends AbstractVDKFileParser {
 

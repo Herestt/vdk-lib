@@ -9,10 +9,10 @@ import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.herestt.vdk.VDK1FileInfo;
-import com.herestt.vdk.VDK1FilePattern;
-import com.herestt.vdk.VDKInnerDirectory;
-import com.herestt.vdk.VDKInnerFile;
+import com.herestt.ro2.vdk.VDK1FileInfo;
+import com.herestt.ro2.vdk.VDK1FilePattern;
+import com.herestt.ro2.vdk.VDKInnerDirectory;
+import com.herestt.ro2.vdk.VDKInnerFile;
 import com.sun.org.apache.bcel.internal.util.ByteSequence;
 
 public class VDK1FileParser extends AbstractVDKFileParser {

@@ -1,4 +1,4 @@
-package com.herestt.vdk;
+package com.herestt.ro2.vdk;
 
 public enum VDKFileVersion {
 
