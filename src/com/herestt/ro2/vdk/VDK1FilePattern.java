@@ -1,6 +1,6 @@
 package com.herestt.ro2.vdk;
 
-public enum VDK1FilePattern {
+public enum VDK1FilePattern implements VDKFilePattern {
 
 	
 	// <SEQUENCE_NAME> (<VARIABLE_NAME>, <OFFSET>, <LENGTH>, IS_LITTLE_ENDIAN).
@@ -31,7 +31,7 @@ public enum VDK1FilePattern {
 	private static final int fileListHeaderLength = 0x04;		//
 	private static final int pathNameBlockLength = 0x108;		//Size of each file's path name.
 
-	private static final String beginningDirectoryToken = new StringBuilder(0x2E).toString();
+	private static final String dotDirectoryToken = new StringBuilder(0x2E).toString();
 	private static final String parentDirectoryToken = new StringBuilder(0x2E2E).toString();
 	private static final int finalDirectoryToken = 0;
 	
@@ -68,8 +68,8 @@ public enum VDK1FilePattern {
 		return pathNameBlockLength;
 	}	
 	
-	public static String getBeginningDirectoryToken() {
-		return beginningDirectoryToken;
+	public static String getDotDirectoryToken() {
+		return dotDirectoryToken;
 	}
 
 	public static String getParentDirectoryToken() {

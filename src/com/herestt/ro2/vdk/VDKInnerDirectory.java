@@ -10,7 +10,7 @@ public class VDKInnerDirectory {
 	private int packedSize;	
 	private int offset;
 	private int parentDirOffset;
-	private int nextDirOffset;
+	private int nextAddrOffset;
 	private VDKInnerDirectory dotDirectory;
 	private VDKInnerDirectory parentAccessorDirectory;
 	private Set<VDKInnerDirectory> children;
@@ -21,13 +21,13 @@ public class VDKInnerDirectory {
 	};	
 	
 	public VDKInnerDirectory(String name, int rawSize, int packedSize,
-			int offset, int nextDirOffset) {
+			int offset, int nextAddrOffset) {
 		super();
 		this.name = name;
 		this.rawSize = rawSize;
 		this.packedSize = packedSize;
 		this.offset = offset;
-		this.nextDirOffset = nextDirOffset;
+		this.nextAddrOffset = nextAddrOffset;
 		children = new HashSet<VDKInnerDirectory>();
 	}
 	
@@ -73,12 +73,12 @@ public class VDKInnerDirectory {
 		this.parentDirOffset = parentDirOffset;
 	}
 
-	public int getNextDirOffset() {
-		return nextDirOffset;
+	public int getNextAddrOffset() {
+		return nextAddrOffset;
 	}
 
-	public void setNextDirOffset(int nextDirOffset) {
-		this.nextDirOffset = nextDirOffset;
+	public void setNextAddrOffset(int nextAddrOffset) {
+		this.nextAddrOffset = nextAddrOffset;
 	}
 
 	public VDKInnerDirectory getDotDirectory() {

@@ -1,19 +1,16 @@
 package com.herestt.ro2.util;
 
-import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.herestt.ro2.io.VDKRandomAccessFile;
 import com.herestt.ro2.vdk.VDK1FileInfo;
 import com.herestt.ro2.vdk.VDK1FilePattern;
 import com.herestt.ro2.vdk.VDKInnerDirectory;
 import com.herestt.ro2.vdk.VDKInnerFile;
-import com.sun.org.apache.bcel.internal.util.ByteSequence;
 
 public class VDK1FileParser extends AbstractVDKFileParser {
 
@@ -43,43 +40,35 @@ public class VDK1FileParser extends AbstractVDKFileParser {
 	private VDK1FileInfo readHeader() {
 	
 		VDK1FileInfo vdkFileInfo = null;				
-		
-		Map<String, byte[]> map = new HashMap<String, byte[]>();
-		
-		try {						
+		VDKRandomAccessFile raf = null;
+		int offset = 0;
 			
-			for(VDK1FilePattern p : VDK1FilePattern.values()) {				
-																										
-				map.put(p.getKey(), read(0, p));
+		try {
 				
-				if((p.getOffset() + p.getLength()) == VDK1FilePattern.getHeaderLength()) {													
-					break;
-				}					
-			}
-		}
-		finally{
-		
-			try {				
-				vdkFileInfo = new VDK1FileInfo( 
-												new String(map.get("version"), "UTF-8").trim(), 
-												new ByteSequence(map.get("unknown")).readInt(),
-												new ByteSequence(map.get("fileCount")).readInt(), 
-												new ByteSequence(map.get("folderCount")).readInt(), 
-												new ByteSequence(map.get("size")).readInt(), 
-												new ByteSequence(map.get("fileListPartSize")).readInt()											
-												);				
-				vdkFileInfo.setNextDirOffset(new ByteSequence(read(VDK1FilePattern.getHeaderLength(), VDK1FilePattern.NEXT_ADDR_OFFSET)).readInt());
-				vdkFileInfo.setOffset(VDK1FilePattern.getHeaderLength());
+			raf = new VDKRandomAccessFile(vdkFilePath, "r");
 				
-			} catch (UnsupportedEncodingException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			vdkFileInfo = new VDK1FileInfo( 
+											raf.readString(offset, VDK1FilePattern.VERSION), 
+											raf.readInt(offset, VDK1FilePattern.UNKNOWN),
+											raf.readInt(offset, VDK1FilePattern.FILE_COUNT), 
+											raf.readInt(offset, VDK1FilePattern.FOLDER_COUNT), 
+											raf.readInt(offset, VDK1FilePattern.SIZE), 
+											raf.readInt(offset, VDK1FilePattern.FILE_LIST_PART_SIZE)											
+											);							
+			vdkFileInfo.setNextAddrOffset(VDK1FilePattern.getHeaderLength());
+			vdkFileInfo.setDotDirectory(readDirectoryHeader(VDK1FilePattern.getHeaderLength()));
+			vdkFileInfo.setOffset(VDK1FilePattern.getHeaderLength());
+			
+			raf.close();
+				
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		
+			
 		return vdkFileInfo;
 	}
 
@@ -88,85 +77,62 @@ public class VDK1FileParser extends AbstractVDKFileParser {
 		Map<Integer, String> filePathMap = new HashMap<Integer, String>();
 		int currentOffset = vdkFileInfo.getSize() + VDK1FilePattern.getRootLength() + VDK1FilePattern.getFileListHeaderLength();
 		int endOfFileList = vdkFileInfo.getSize() + VDK1FilePattern.getRootLength() + vdkFileInfo.getFileListPartLength();	
-		byte[] fileOffsetBuffer = null;
-		byte[] filePathBuffer = null;
 		
-		while(currentOffset < endOfFileList) {
-
-			try {
-				
-				filePathBuffer = read(currentOffset, VDK1FilePattern.FILE_PATH);
-				fileOffsetBuffer = read(currentOffset, VDK1FilePattern.FILE_OFFSET);							
-				currentOffset += VDK1FilePattern.getPathNameBlockLength();							
-
-				filePathMap.put(
-								new ByteSequence(fileOffsetBuffer).readInt(), 
-								new String(filePathBuffer, "UTF-8").trim()
-								);
-				
-				//System.out.println(new ByteSequence(fileOffsetBuffer).readInt() + ": " + new String(filePathBuffer, "UTF-8").trim());
-				
-			} catch (IOException e) {				
+		try {			
 			
-				e.printStackTrace();
-			}					
+			VDKRandomAccessFile raf = new VDKRandomAccessFile(vdkFilePath, "r");
+			
+			while(currentOffset < endOfFileList) {
+				
+				//System.out.println(raf.readInt(currentOffset, VDK1FilePattern.FILE_OFFSET) + ": " + raf.readString(currentOffset, VDK1FilePattern.FILE_PATH));
+				
+				filePathMap.put(								 
+								raf.readInt(currentOffset, VDK1FilePattern.FILE_OFFSET),
+								raf.readString(currentOffset, VDK1FilePattern.FILE_PATH)
+								);
+				currentOffset += VDK1FilePattern.getPathNameBlockLength();
+			}
+			
+			raf.close();
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		
 		return filePathMap;
 	}	
 	
-	private void parse(VDKInnerDirectory parentDir) {
-		
-		VDKInnerDirectory dir;
-		int nextOffset; 
-		
-		if(parentDir instanceof VDK1FileInfo)
-			nextOffset = parentDir.getNextDirOffset();
-		// IF the parent directory is a directory instance.
-		else nextOffset = parentDir.getParentAccessorDirectory().getNextDirOffset();
-		
-		while(nextOffset != VDK1FilePattern.getFinalDirectoryToken()) {
-			
-			dir = readInnerSequence(nextOffset);
-			
-			if(dir instanceof VDKInnerFile) {
-				
-				parentDir.addChild(dir);
-				nextOffset = dir.getNextDirOffset();
-			}
-			// IF "dir" is a directory instance.
-			else {
-				
-				parse(dir);
-				parentDir.addChild(dir);
-				nextOffset = dir.getNextDirOffset();
-			}
-				
-		}
-	}
-		
+	
 	private VDKInnerDirectory readInnerSequence(int currentOffset) {
 		
-		VDKInnerDirectory vdkInnerDirectory = null;	
+		VDKInnerDirectory vdkInnerDirectory = null;
+		VDKRandomAccessFile raf = null;
 		boolean isDirectory;
 		
 		try {
-						
-			isDirectory = new ByteSequence(read(currentOffset, VDK1FilePattern.IS_DIRECTORY)).readBoolean();						
+					
+			raf = new VDKRandomAccessFile(vdkFilePath, "r");
+			
+			isDirectory = raf.readBoolean(currentOffset, VDK1FilePattern.IS_DIRECTORY);						
 			vdkInnerDirectory = readDirectoryHeader(currentOffset);
 			
 			if(isDirectory) {
 
-				if((vdkInnerDirectory.getName() != VDK1FilePattern.getBeginningDirectoryToken()) || (vdkInnerDirectory.getName() != VDK1FilePattern.getParentDirectoryToken())) {
+				if((vdkInnerDirectory.getName() != VDK1FilePattern.getDotDirectoryToken()) || (vdkInnerDirectory.getName() != VDK1FilePattern.getParentDirectoryToken())) {
 														
 					int dotDirectoryOffset = vdkInnerDirectory.getParentDirOffset();
-					int parentDirectoryAccessorOffset =	new ByteSequence(read(dotDirectoryOffset, VDK1FilePattern.NEXT_ADDR_OFFSET)).readInt();
+					int parentDirectoryAccessorOffset =	raf.readInt(dotDirectoryOffset, VDK1FilePattern.NEXT_ADDR_OFFSET);
 					
 					vdkInnerDirectory.setDotDirectory(readDirectoryHeader(dotDirectoryOffset));
 					vdkInnerDirectory.setParentAccessorDirectory(readDirectoryHeader(parentDirectoryAccessorOffset));
 					
 				} 
 				//TODO - Herestt: throw an exception else.
+				
+				raf.close();
 
 			}
 		} catch (IOException e) {
@@ -180,22 +146,26 @@ public class VDK1FileParser extends AbstractVDKFileParser {
 	private VDKInnerDirectory readDirectoryHeader(int offset) {
 		
 		VDKInnerDirectory vdkInnerDirectory = null;
+		VDKRandomAccessFile raf = null;
 		boolean isDirectory; 
 		
 		try {
+			raf = new VDKRandomAccessFile(vdkFilePath, "r");
 			
-			isDirectory = new ByteSequence(read(offset, VDK1FilePattern.IS_DIRECTORY)).readBoolean();
+			isDirectory = raf.readBoolean(offset, VDK1FilePattern.IS_DIRECTORY);
 			
 			if(isDirectory)
 				vdkInnerDirectory = new VDKInnerDirectory();
 			else vdkInnerDirectory = new VDKInnerFile();
 			
-			vdkInnerDirectory.setName(new String(read(offset, VDK1FilePattern.NAME), "UTF-8").trim());
-			vdkInnerDirectory.setRawSize(new ByteSequence(read(offset, VDK1FilePattern.RAW_SIZE)).readInt());
-			vdkInnerDirectory.setPackedSize(new ByteSequence(read(offset, VDK1FilePattern.PACKED_SIZE)).readInt());
+			vdkInnerDirectory.setName(raf.readString(offset, VDK1FilePattern.NAME));
+			vdkInnerDirectory.setRawSize(raf.readInt(offset, VDK1FilePattern.RAW_SIZE));
+			vdkInnerDirectory.setPackedSize(raf.readInt(offset, VDK1FilePattern.PACKED_SIZE));
 			vdkInnerDirectory.setOffset(offset);
-			vdkInnerDirectory.setParentDirOffset(new ByteSequence(read(offset, VDK1FilePattern.PARENT_DIRECTORY)).readInt());
-			vdkInnerDirectory.setNextDirOffset(new ByteSequence(read(offset, VDK1FilePattern.NEXT_ADDR_OFFSET)).readInt());
+			vdkInnerDirectory.setParentDirOffset(raf.readInt(offset, VDK1FilePattern.PARENT_DIRECTORY));
+			vdkInnerDirectory.setNextAddrOffset(raf.readInt(offset, VDK1FilePattern.NEXT_ADDR_OFFSET));
+			
+			raf.close();
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -205,46 +175,34 @@ public class VDK1FileParser extends AbstractVDKFileParser {
 		return vdkInnerDirectory;
 	}
 
-	private byte[] read(int offset, VDK1FilePattern pattern) {
+	private void parse(VDKInnerDirectory parentDir) {
 		
-		byte[] buffer = new byte[pattern.getLength()];
-		byte[] resultBuffer = new byte[pattern.getLength()];
-		int bytesRead;
-		int tmp;	
+		VDKInnerDirectory dir;
+		int nextOffset; 
 		
-		RandomAccessFile raf = null;		
+		if(parentDir instanceof VDK1FileInfo)
+			nextOffset = parentDir.getDotDirectory().getNextAddrOffset();
+		// IF the parent directory is a directory instance.
+		else nextOffset = parentDir.getParentAccessorDirectory().getNextAddrOffset();
 		
-		try {					
+		while(nextOffset != VDK1FilePattern.getFinalDirectoryToken()) {
 			
-			raf = new RandomAccessFile(new File(vdkFilePath), "r");
+			dir = readInnerSequence(nextOffset);
 			
-			raf.seek(offset + pattern.getOffset());
-			bytesRead = raf.read(buffer);
-			
-			if (bytesRead != pattern.getLength()) {
-				raf.close();
-			    throw new IOException("Unexpected End of Stream");
+			if(dir instanceof VDKInnerFile) {
+				
+				dir.setChildren(null);				
+				parentDir.addChild(dir);								
+				nextOffset = dir.getNextAddrOffset();
 			}
-
-			if(pattern.isLittleEndian()){					
-				tmp = ByteBuffer.wrap(buffer).order(ByteOrder.LITTLE_ENDIAN).getInt();					
-				resultBuffer = ByteBuffer.allocate(pattern.getLength()).putInt(tmp).array();
-			}					
-			else ByteBuffer.wrap(buffer).order(ByteOrder.BIG_ENDIAN).get(resultBuffer);
-			
-			raf.close();
-			
-		} catch (IOException e) {
-			
-			try {
-				raf.close();
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
+			// IF "dir" is a directory instance.
+			else {
+				
+				parse(dir);
+				parentDir.addChild(dir);
+				nextOffset = dir.getNextAddrOffset();
 			}
-			e.printStackTrace();
+				
 		}
-		
-		return resultBuffer;
 	}
 }
