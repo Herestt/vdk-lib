@@ -115,43 +115,36 @@ public class VDK1FileParser extends AbstractVDKFileParser {
 		return filePathMap;
 	}	
 	
-	private void parse(VDK1FileInfo fileInfo) {
+	private void parse(VDKInnerDirectory parentDir) {
 		
-		int currentOffset = fileInfo.getNextDirOffset();
-		VDKInnerDirectory currentParentDir = fileInfo;
-		VDKInnerDirectory currentDir = null;
+		VDKInnerDirectory dir;
+		int nextOffset; 
 		
-		while(currentOffset != fileInfo.getSize()) {
+		if(parentDir instanceof VDK1FileInfo)
+			nextOffset = parentDir.getNextDirOffset();
+		// IF the parent directory is a directory instance.
+		else nextOffset = parentDir.getParentAccessorDirectory().getNextDirOffset();
+		
+		while(nextOffset != VDK1FilePattern.getFinalDirectoryToken()) {
 			
-			currentDir = readInnerSequence(currentOffset);
-			System.out.println(currentOffset + ": " + currentDir.getName());
+			dir = readInnerSequence(nextOffset);
 			
-			if(currentDir instanceof VDKInnerFile) {
+			if(dir instanceof VDKInnerFile) {
 				
-				currentParentDir.addChild(currentDir);
-				
-				if(currentDir.getNextDirOffset() == VDK1FilePattern.getFinalDirectoryToken()) {
-					
-					if(currentParentDir.getNextDirOffset() == VDK1FilePattern.getFinalDirectoryToken()) break;
-					currentOffset = currentParentDir.getNextDirOffset();
-				}					
-				else currentOffset = currentDir.getNextDirOffset();
+				parentDir.addChild(dir);
+				nextOffset = dir.getNextDirOffset();
 			}
-			
-			else if(currentDir instanceof VDKInnerDirectory) {
+			// IF "dir" is a directory instance.
+			else {
 				
-				if(fileInfo.getOffset() == currentDir.getParentAccessorDirectory().getParentDirOffset())				
-					fileInfo.addChild(currentDir);							
-				else
-					fileInfo.findChild(currentDir.getParentAccessorDirectory().getParentDirOffset()).addChild(currentDir);
-				if((currentDir.getNextDirOffset() == VDK1FilePattern.getFinalDirectoryToken()) 
-					&& (currentDir.getParentAccessorDirectory().getNextDirOffset() == VDK1FilePattern.getFinalDirectoryToken())) break;
-				currentParentDir = currentDir;
-				currentOffset = currentDir.getParentAccessorDirectory().getNextDirOffset();
-			}										
+				parse(dir);
+				parentDir.addChild(dir);
+				nextOffset = dir.getNextDirOffset();
+			}
+				
 		}
 	}
-	
+		
 	private VDKInnerDirectory readInnerSequence(int currentOffset) {
 		
 		VDKInnerDirectory vdkInnerDirectory = null;	

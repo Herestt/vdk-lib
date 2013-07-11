@@ -121,9 +121,12 @@ public class VDKInnerDirectory {
 		
 		for(VDKInnerDirectory d : children) {
 			 
-			if(d.getDotDirectory().getOffset() == offset)
-				return d;
-			return d.findChild(offset);
+			if(!(d instanceof VDKInnerFile)) {
+				
+				if(d.getDotDirectory().getOffset() == offset)
+					return d;
+				return d.findChild(offset);
+			}
 		}
 		
 		//TODO - Herestt: Throw exception.

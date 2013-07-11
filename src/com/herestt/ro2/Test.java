@@ -9,7 +9,7 @@ public class Test {
 	 */
 	public static void main(String[] args) {
 		
-		AbstractVDKFileParser fileParser = AbstractVDKFileParser.getParser("C:\\Users\\Herestt\\Desktop\\OBJECT_CITY.vdk");
+		AbstractVDKFileParser fileParser = AbstractVDKFileParser.getParser("C:\\Users\\Herestt\\Desktop\\OBJECT_CITY.VDK");
 		
 		fileParser.start();	
 		
