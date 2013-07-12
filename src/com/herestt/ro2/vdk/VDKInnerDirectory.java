@@ -6,11 +6,11 @@ import java.util.Set;
 public class VDKInnerDirectory {
 
 	private String name;
-	private int rawSize;
-	private int packedSize;	
-	private int offset;
-	private int parentDirOffset;
-	private int nextAddrOffset;
+	private long rawSize;
+	private long packedSize;	
+	private long offset;
+	private long parentDirOffset;
+	private long nextAddrOffset;
 	private VDKInnerDirectory dotDirectory;
 	private VDKInnerDirectory parentAccessorDirectory;
 	private Set<VDKInnerDirectory> children;
@@ -41,43 +41,43 @@ public class VDKInnerDirectory {
 		this.name = name;
 	}
 
-	public int getRawSize() {
+	public long getRawSize() {
 		return rawSize;
 	}
 
-	public void setRawSize(int rawSize) {
+	public void setRawSize(long rawSize) {
 		this.rawSize = rawSize;
 	}
 
-	public int getPackedSize() {
+	public long getPackedSize() {
 		return packedSize;
 	}
 
-	public void setPackedSize(int packedSize) {
+	public void setPackedSize(long packedSize) {
 		this.packedSize = packedSize;
 	}
 
-	public int getOffset() {
+	public long getOffset() {
 		return offset;
 	}
 
-	public void setOffset(int offset) {
+	public void setOffset(long offset) {
 		this.offset = offset;
 	}
 
-	public int getParentDirOffset() {
+	public long getParentDirOffset() {
 		return parentDirOffset;
 	}
 
-	public void setParentDirOffset(int parentDirOffset) {
+	public void setParentDirOffset(long parentDirOffset) {
 		this.parentDirOffset = parentDirOffset;
 	}
 
-	public int getNextAddrOffset() {
+	public long getNextAddrOffset() {
 		return nextAddrOffset;
 	}
 
-	public void setNextAddrOffset(int nextAddrOffset) {
+	public void setNextAddrOffset(long nextAddrOffset) {
 		this.nextAddrOffset = nextAddrOffset;
 	}
 

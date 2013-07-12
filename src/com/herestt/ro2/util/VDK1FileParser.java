@@ -41,20 +41,21 @@ public class VDK1FileParser extends AbstractVDKFileParser {
 	
 		VDK1FileInfo vdkFileInfo = null;				
 		VDKRandomAccessFile raf = null;
-		int offset = 0;
+		long offset = 0;
 			
 		try {
 				
 			raf = new VDKRandomAccessFile(vdkFilePath, "r");
-				
+			
 			vdkFileInfo = new VDK1FileInfo( 
 											raf.readString(offset, VDK1FilePattern.VERSION), 
-											raf.readInt(offset, VDK1FilePattern.UNKNOWN),
-											raf.readInt(offset, VDK1FilePattern.FILE_COUNT), 
-											raf.readInt(offset, VDK1FilePattern.FOLDER_COUNT), 
-											raf.readInt(offset, VDK1FilePattern.SIZE), 
-											raf.readInt(offset, VDK1FilePattern.FILE_LIST_PART_SIZE)											
-											);							
+											raf.readUnsignedInt(offset, VDK1FilePattern.UNKNOWN),
+											raf.readUnsignedInt(offset, VDK1FilePattern.FILE_COUNT), 
+											raf.readUnsignedInt(offset, VDK1FilePattern.FOLDER_COUNT), 
+											raf.readUnsignedInt(offset, VDK1FilePattern.SIZE), 
+											raf.readUnsignedInt(offset, VDK1FilePattern.FILE_LIST_PART_SIZE)											
+											);			
+			vdkFileInfo.setName(vdkFilePath);
 			vdkFileInfo.setNextAddrOffset(VDK1FilePattern.getHeaderLength());
 			vdkFileInfo.setDotDirectory(readDirectoryHeader(VDK1FilePattern.getHeaderLength()));
 			vdkFileInfo.setOffset(VDK1FilePattern.getHeaderLength());
@@ -72,11 +73,11 @@ public class VDK1FileParser extends AbstractVDKFileParser {
 		return vdkFileInfo;
 	}
 
-	private Map<Integer, String> retrieveFilePathMap(VDK1FileInfo vdkFileInfo) {
+	private Map<Long, String> retrieveFilePathMap(VDK1FileInfo vdkFileInfo) {
 		
-		Map<Integer, String> filePathMap = new HashMap<Integer, String>();
-		int currentOffset = vdkFileInfo.getSize() + VDK1FilePattern.getRootLength() + VDK1FilePattern.getFileListHeaderLength();
-		int endOfFileList = vdkFileInfo.getSize() + VDK1FilePattern.getRootLength() + vdkFileInfo.getFileListPartLength();	
+		Map<Long, String> filePathMap = new HashMap<Long, String>();
+		long currentOffset = vdkFileInfo.getSize() + VDK1FilePattern.getRootLength() + VDK1FilePattern.getFileListHeaderLength();
+		long endOfFileList = vdkFileInfo.getSize() + VDK1FilePattern.getRootLength() + vdkFileInfo.getFileListPartLength();	
 		
 		try {			
 			
@@ -84,10 +85,10 @@ public class VDK1FileParser extends AbstractVDKFileParser {
 			
 			while(currentOffset < endOfFileList) {
 				
-				//System.out.println(raf.readInt(currentOffset, VDK1FilePattern.FILE_OFFSET) + ": " + raf.readString(currentOffset, VDK1FilePattern.FILE_PATH));
+				//System.out.println(raf.readUnsignedInt(currentOffset, VDK1FilePattern.FILE_OFFSET) + ": " + raf.readString(currentOffset, VDK1FilePattern.FILE_PATH));
 				
 				filePathMap.put(								 
-								raf.readInt(currentOffset, VDK1FilePattern.FILE_OFFSET),
+								raf.readUnsignedInt(currentOffset, VDK1FilePattern.FILE_OFFSET),
 								raf.readString(currentOffset, VDK1FilePattern.FILE_PATH)
 								);
 				currentOffset += VDK1FilePattern.getPathNameBlockLength();
@@ -106,7 +107,7 @@ public class VDK1FileParser extends AbstractVDKFileParser {
 	}	
 	
 	
-	private VDKInnerDirectory readInnerSequence(int currentOffset) {
+	private VDKInnerDirectory readInnerSequence(long nextOffset) {
 		
 		VDKInnerDirectory vdkInnerDirectory = null;
 		VDKRandomAccessFile raf = null;
@@ -116,15 +117,15 @@ public class VDK1FileParser extends AbstractVDKFileParser {
 					
 			raf = new VDKRandomAccessFile(vdkFilePath, "r");
 			
-			isDirectory = raf.readBoolean(currentOffset, VDK1FilePattern.IS_DIRECTORY);						
-			vdkInnerDirectory = readDirectoryHeader(currentOffset);
+			isDirectory = raf.readBoolean(nextOffset, VDK1FilePattern.IS_DIRECTORY);						
+			vdkInnerDirectory = readDirectoryHeader(nextOffset);
 			
 			if(isDirectory) {
 
 				if((vdkInnerDirectory.getName() != VDK1FilePattern.getDotDirectoryToken()) || (vdkInnerDirectory.getName() != VDK1FilePattern.getParentDirectoryToken())) {
 														
-					int dotDirectoryOffset = vdkInnerDirectory.getParentDirOffset();
-					int parentDirectoryAccessorOffset =	raf.readInt(dotDirectoryOffset, VDK1FilePattern.NEXT_ADDR_OFFSET);
+					long dotDirectoryOffset = vdkInnerDirectory.getParentDirOffset();
+					long parentDirectoryAccessorOffset = raf.readUnsignedInt(dotDirectoryOffset, VDK1FilePattern.NEXT_ADDR_OFFSET);
 					
 					vdkInnerDirectory.setDotDirectory(readDirectoryHeader(dotDirectoryOffset));
 					vdkInnerDirectory.setParentAccessorDirectory(readDirectoryHeader(parentDirectoryAccessorOffset));
@@ -143,7 +144,7 @@ public class VDK1FileParser extends AbstractVDKFileParser {
 		return vdkInnerDirectory;
 	}
 	
-	private VDKInnerDirectory readDirectoryHeader(int offset) {
+	private VDKInnerDirectory readDirectoryHeader(long offset) {
 		
 		VDKInnerDirectory vdkInnerDirectory = null;
 		VDKRandomAccessFile raf = null;
@@ -159,11 +160,11 @@ public class VDK1FileParser extends AbstractVDKFileParser {
 			else vdkInnerDirectory = new VDKInnerFile();
 			
 			vdkInnerDirectory.setName(raf.readString(offset, VDK1FilePattern.NAME));
-			vdkInnerDirectory.setRawSize(raf.readInt(offset, VDK1FilePattern.RAW_SIZE));
-			vdkInnerDirectory.setPackedSize(raf.readInt(offset, VDK1FilePattern.PACKED_SIZE));
+			vdkInnerDirectory.setRawSize(raf.readUnsignedInt(offset, VDK1FilePattern.RAW_SIZE));
+			vdkInnerDirectory.setPackedSize(raf.readUnsignedInt(offset, VDK1FilePattern.PACKED_SIZE));
 			vdkInnerDirectory.setOffset(offset);
-			vdkInnerDirectory.setParentDirOffset(raf.readInt(offset, VDK1FilePattern.PARENT_DIRECTORY));
-			vdkInnerDirectory.setNextAddrOffset(raf.readInt(offset, VDK1FilePattern.NEXT_ADDR_OFFSET));
+			vdkInnerDirectory.setParentDirOffset(raf.readUnsignedInt(offset, VDK1FilePattern.PARENT_DIRECTORY));
+			vdkInnerDirectory.setNextAddrOffset(raf.readUnsignedInt(offset, VDK1FilePattern.NEXT_ADDR_OFFSET));
 			
 			raf.close();
 			
@@ -178,7 +179,7 @@ public class VDK1FileParser extends AbstractVDKFileParser {
 	private void parse(VDKInnerDirectory parentDir) {
 		
 		VDKInnerDirectory dir;
-		int nextOffset; 
+		long nextOffset; 
 		
 		if(parentDir instanceof VDK1FileInfo)
 			nextOffset = parentDir.getDotDirectory().getNextAddrOffset();
