@@ -1,6 +1,9 @@
 package com.herestt.ro2;
 
+import java.io.File;
+
 import com.herestt.ro2.util.AbstractVDKFileParser;
+import com.herestt.ro2.vdk.VDK1FileInfo;
 
 public class Test {
 
@@ -9,12 +12,11 @@ public class Test {
 	 */
 	public static void main(String[] args) {
 		
-		AbstractVDKFileParser fileParser = AbstractVDKFileParser.getParser("C:\\Users\\Herestt\\Desktop\\OBJECT_CITY.VDK");
+		VDK1FileInfo fileInfo = null;
 		
-		fileParser.start();	
-		
-		
-		
+		AbstractVDKFileParser fileParser = AbstractVDKFileParser.getParser("C:\\Users\\Herestt\\Desktop\\OBJECT_CITY.VDK");				
+		fileInfo = fileParser.start();
+		fileInfo.unpack("C:\\Users\\Herestt\\Desktop");
 	}
 
 }

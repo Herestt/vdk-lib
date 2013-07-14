@@ -1,6 +1,11 @@
 package com.herestt.ro2.io;
 
+import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
@@ -19,7 +24,7 @@ public class VDKRandomAccessFile extends RandomAccessFile{
 		
 		byte[] buffer = new byte[pattern.getLength()];
 		byte[] resultBuffer = new byte[pattern.getLength()];
-		int bytesRead, tmp;
+		int bytesRead;
 		
 		try {
 
@@ -36,8 +41,7 @@ public class VDKRandomAccessFile extends RandomAccessFile{
 					resultBuffer[(buffer.length - 1) - i] = buffer[i];
 			}			
 			// Data are naturally red as big endian bit sequence.
-			else resultBuffer = buffer;
-				//ByteBuffer.wrap(buffer).order(ByteOrder.BIG_ENDIAN).get(resultBuffer);
+			else resultBuffer = buffer;			
 			
 		} catch (IOException e) {
 			
@@ -51,7 +55,7 @@ public class VDKRandomAccessFile extends RandomAccessFile{
 		
 		return resultBuffer;
 	}
-	
+		
 	public int readInt(long offset, VDKFilePattern pattern) throws IOException {
 		return new ByteSequence(read(offset, pattern)).readInt();
 	}
@@ -66,5 +70,36 @@ public class VDKRandomAccessFile extends RandomAccessFile{
 	
 	public boolean readBoolean(long offset, VDKFilePattern pattern) throws IOException {
 		return new ByteSequence(read(offset, pattern)).readBoolean();
+	}
+	
+	public File writeContentToTmp(long offset, long length) {
+		
+		File tmp = null;		
+		BufferedOutputStream bos = null;
+		long l = 0;
+		int c;
+		
+		try {
+			
+			tmp = File.createTempFile("vdkFileContent", ".tmp");
+			bos = new BufferedOutputStream(new FileOutputStream(tmp.getAbsoluteFile()));
+					
+			seek(offset);
+			while(l < length){
+				
+				c = read();
+				
+				bos.write(c);
+				l++;
+			}
+				
+			bos.close();
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return tmp;
 	}
 }

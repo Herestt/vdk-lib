@@ -1,5 +1,6 @@
 package com.herestt.ro2.vdk;
 
+import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -131,5 +132,16 @@ public class VDKInnerDirectory {
 		
 		//TODO - Herestt: Throw exception.
 		return null;
+	}
+	
+	public void unpack(String source, String destination) {
+		
+		String dirDestination = destination + File.separator + name;
+		new File(dirDestination).mkdirs();
+		
+		for(VDKInnerDirectory c : children) {
+			
+			c.unpack(source, dirDestination);
+		}
 	}
 }

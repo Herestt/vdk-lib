@@ -1,5 +1,6 @@
 package com.herestt.ro2.util;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -41,7 +42,7 @@ public class VDK1FileParser extends AbstractVDKFileParser {
 	
 		VDK1FileInfo vdkFileInfo = null;				
 		VDKRandomAccessFile raf = null;
-		long offset = 0;
+		long offset = 0;		
 			
 		try {
 				
@@ -55,10 +56,11 @@ public class VDK1FileParser extends AbstractVDKFileParser {
 											raf.readUnsignedInt(offset, VDK1FilePattern.SIZE), 
 											raf.readUnsignedInt(offset, VDK1FilePattern.FILE_LIST_PART_SIZE)											
 											);			
-			vdkFileInfo.setName(vdkFilePath);
+			vdkFileInfo.setName(getFileName(vdkFilePath));
 			vdkFileInfo.setNextAddrOffset(VDK1FilePattern.getHeaderLength());
 			vdkFileInfo.setDotDirectory(readDirectoryHeader(VDK1FilePattern.getHeaderLength()));
 			vdkFileInfo.setOffset(VDK1FilePattern.getHeaderLength());
+			vdkFileInfo.setSourcePath(vdkFilePath);
 			
 			raf.close();
 				
@@ -71,6 +73,16 @@ public class VDK1FileParser extends AbstractVDKFileParser {
 		}
 			
 		return vdkFileInfo;
+	}
+
+	private String getFileName(String filePath) {
+		
+		String fileName = null;
+		File file = new File(filePath);
+		
+		fileName = file.getName();
+		
+		return fileName.substring(0, fileName.lastIndexOf("."));
 	}
 
 	private Map<Long, String> retrieveFilePathMap(VDK1FileInfo vdkFileInfo) {
@@ -194,7 +206,7 @@ public class VDK1FileParser extends AbstractVDKFileParser {
 				
 				dir.setChildren(null);				
 				parentDir.addChild(dir);								
-				nextOffset = dir.getNextAddrOffset();
+				nextOffset = dir.getNextAddrOffset();				
 			}
 			// IF "dir" is a directory instance.
 			else {

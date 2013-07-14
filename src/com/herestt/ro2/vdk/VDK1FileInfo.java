@@ -10,8 +10,9 @@ public class VDK1FileInfo extends VDKInnerDirectory{
 	private long fileCount;							// Amount of file in the VDK file.
 	private long folderCount;						// Amount of folder in the VDK file.
 	private long size;								// VDK file's size.	
-	private long fileListPartLength;					// Trailing file list's size.
-	private Map<Long, String> filePathMap;		// Map holding the trailing file list. <File_Offset, File_Path>.
+	private long fileListPartLength;				// Trailing file list's size.
+	private Map<Long, String> filePathMap;			// Map holding the trailing file list. <File_Offset, File_Path>.
+	private String sourcePath;						// Targeted VDK File's(unpackage)/Directory's(package) source path.
 	
 	public VDK1FileInfo(String version, long unknown, long fileCount, long folderCount, long size, 
 			long fileListPartSize) {
@@ -85,5 +86,17 @@ public class VDK1FileInfo extends VDKInnerDirectory{
 	}
 	
 	// Methods.
+	
+	public String getSourcePath() {
+		return sourcePath;
+	}
 
+
+	public void setSourcePath(String sourcePath) {
+		this.sourcePath = sourcePath;
+	}
+
+	public void unpack(String destination) {		
+		unpack(getSourcePath(), destination);
+	}
 }
