@@ -5,7 +5,7 @@ import java.io.FileNotFoundException;
 
 import java.io.IOException;
 
-import com.herestt.ro2.vdk.VDK1FileInfo;
+import com.herestt.ro2.vdk.AbstractVDKFileInfo;
 import com.herestt.ro2.vdk.VDKFileVersion;
 
 public abstract class AbstractVDKFileParser {
@@ -26,7 +26,7 @@ public abstract class AbstractVDKFileParser {
 		if(vdkFileVersion == VDKFileVersion.VDK1)					
 			return new VDK1FileParser(vdkFilePath);
 
-		//TODO - Herestt: Throw exception if the file isn't VDISK type;
+		//TODO - Herestt: Throw exception if the file isn't VDISK type.
 		return null;
 	}
 
@@ -60,5 +60,5 @@ public abstract class AbstractVDKFileParser {
 		return VDKFileVersion.getEnumFromVersion(strVDKFileVersion);
 	}
 	
-	public abstract VDK1FileInfo start();
+	public abstract AbstractVDKFileInfo start();
 }

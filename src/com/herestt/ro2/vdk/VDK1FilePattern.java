@@ -31,8 +31,8 @@ public enum VDK1FilePattern implements VDKFilePattern {
 	private static final int fileListHeaderLength = 0x04;		//
 	private static final int pathNameBlockLength = 0x108;		//Size of each file's path name.
 
-	private static final String dotDirectoryToken = new StringBuilder(0x2E).toString();
-	private static final String parentDirectoryToken = new StringBuilder(0x2E2E).toString();
+	private static final String dotDirectoryToken = ".";
+	private static final String parentDirectoryToken = "..";
 	private static final int finalDirectoryToken = 0;
 	
 	// 	File's sequences variables.

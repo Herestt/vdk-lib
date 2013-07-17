@@ -17,7 +17,7 @@ public class VDK1FileParser extends AbstractVDKFileParser {
 
 	private final String vdkFilePath;
 	
-	public VDK1FileParser(String vdkFilePath) {
+	protected VDK1FileParser(String vdkFilePath) {
 		
 		this.vdkFilePath = vdkFilePath;
 	}
@@ -25,7 +25,7 @@ public class VDK1FileParser extends AbstractVDKFileParser {
 	public String getVdkFilePath() {
 		return vdkFilePath;
 	}
-	
+
 	@Override
 	public VDK1FileInfo start() {
 

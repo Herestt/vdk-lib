@@ -4,7 +4,7 @@ import com.herestt.ro2.vdk.VDK1FileInfo;
 
 public class VDK0FileParser extends AbstractVDKFileParser {
 
-	public VDK0FileParser(String vdkFilePath) {
+	protected VDK0FileParser(String vdkFilePath) {
 		// TODO Auto-generated constructor stub
 	}
 

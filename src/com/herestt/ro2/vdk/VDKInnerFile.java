@@ -17,13 +17,14 @@ public class VDKInnerFile extends VDKInnerDirectory {
 		super();
 	}
 
-	public VDKInnerFile(String name, int rawSize, int packedSize, int offset, int nextDirOffset) {
-		super(name, rawSize, packedSize, offset, nextDirOffset);
+	public VDKInnerFile(String name, long rawSize, long packedSize,
+			long offset, long parentDirOffset, long nextAddrOffset) {
+		super(name, rawSize, packedSize, offset, parentDirOffset, nextAddrOffset);
 	}
 	
 	// Getters and Setters.
 	
-	// Methods.
+	// Methods.	
 	
 	public void unpack(String source, String destination) {
 		
@@ -43,7 +44,7 @@ public class VDKInnerFile extends VDKInnerDirectory {
 		try {
 
 			raf = new VDKRandomAccessFile(source, "r");			
-			tmp = raf.writeContentToTmp(fileContentOffset, getPackedSize());			
+			tmp = raf.putIntoTemp(fileContentOffset, getPackedSize());			
 			raf.close();			
 			
 		} catch (FileNotFoundException e) {

@@ -15,19 +15,21 @@ public class VDKInnerDirectory {
 	private VDKInnerDirectory dotDirectory;
 	private VDKInnerDirectory parentAccessorDirectory;
 	private Set<VDKInnerDirectory> children;
+	private String sourcePath;
 	
 	public VDKInnerDirectory() {
 		
 		children = new HashSet<VDKInnerDirectory>();
 	};	
 	
-	public VDKInnerDirectory(String name, int rawSize, int packedSize,
-			int offset, int nextAddrOffset) {
+	public VDKInnerDirectory(String name, long rawSize, long packedSize,
+			long offset, long parentDirOffset, long nextAddrOffset) {
 		super();
 		this.name = name;
 		this.rawSize = rawSize;
 		this.packedSize = packedSize;
 		this.offset = offset;
+		this.parentDirOffset = parentDirOffset;
 		this.nextAddrOffset = nextAddrOffset;
 		children = new HashSet<VDKInnerDirectory>();
 	}
@@ -106,8 +108,16 @@ public class VDKInnerDirectory {
 		this.children = children;
 	}
 	
-	// Methods
+	public String getSourcePath() {
+		return sourcePath;
+	}
+
+	public void setSourcePath(String sourcePath) {
+		this.sourcePath = sourcePath;
+	}
 	
+	// Methods
+
 	public void addChild(VDKInnerDirectory component) {
 		
 		children.add(component);
@@ -132,6 +142,22 @@ public class VDKInnerDirectory {
 		
 		//TODO - Herestt: Throw exception.
 		return null;
+	}
+	
+	protected long packChildren(String destination, VDKInnerDirectory parentDir) {
+		
+		long currentOffset = 0;
+		Set<VDKInnerDirectory> directoryList = new HashSet<VDKInnerDirectory>();
+		
+		for(VDKInnerDirectory c : getChildren()) {
+			
+			if(c instanceof VDKInnerFile) {
+				
+				currentOffset = c.packChildren(destination, this);
+			}
+			else directoryList.add(c);
+		}
+		return currentOffset;
 	}
 	
 	public void unpack(String source, String destination) {
