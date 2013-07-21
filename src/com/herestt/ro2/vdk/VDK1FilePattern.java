@@ -19,10 +19,15 @@ public enum VDK1FilePattern implements VDKFilePattern {
 	PACKED_SIZE("packedSize", 0x85, 0x04, true),
 	PARENT_DIRECTORY ("parentDirOffset", 0x89, 0x04, true),
 	NEXT_ADDR_OFFSET("nextAddrOffset", 0x8D, 0x04, true),
+	FILE_CONTENT("fileContent", 0x91, 0xFFFF, true),
+	
+		// File Root.
+	FILE_ROOT("fileRoot", 0x00, 0x91, true),
 	
 		// File List.
-	FILE_PATH ("filePath", 0x00, 0x104, false),
-	FILE_OFFSET ("fileOffset", 0x104, 0x04, true);	
+	FILE_LIST_HEADER("fileListHeader", 0x00, 0x04, true),
+	FILE_PATH ("filePath", 0x04, 0x108, false),
+	FILE_OFFSET ("fileOffset", 0x108, 0x04, true);	
 	
 	// File's structure variables.
 	private static final int headerLength = 0x1C;				// Hexadecimal length.

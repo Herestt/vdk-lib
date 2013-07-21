@@ -1,6 +1,7 @@
 package com.herestt.ro2.util;
 
 import java.io.File;
+import java.util.Map;
 
 import com.herestt.ro2.vdk.AbstractVDKFileInfo;
 import com.herestt.ro2.vdk.VDK1FileInfo;
@@ -61,7 +62,7 @@ public class VDK1FileBuilder extends AbstractVDKFileBuilder {
 		
 		return vdkFileInfo;
 	}
-
+	
 	private long determineFileCount(String path) {
 		
 		long fileCount = 0;

@@ -85,9 +85,9 @@ public class VDK1FileParser extends AbstractVDKFileParser {
 		return fileName.substring(0, fileName.lastIndexOf("."));
 	}
 
-	private Map<Long, String> retrieveFilePathMap(VDK1FileInfo vdkFileInfo) {
+	private Map<String, Long> retrieveFilePathMap(VDK1FileInfo vdkFileInfo) {
 		
-		Map<Long, String> filePathMap = new HashMap<Long, String>();
+		Map<String, Long> filePathMap = new HashMap<String, Long>();
 		long currentOffset = vdkFileInfo.getSize() + VDK1FilePattern.getRootLength() + VDK1FilePattern.getFileListHeaderLength();
 		long endOfFileList = vdkFileInfo.getSize() + VDK1FilePattern.getRootLength() + vdkFileInfo.getFileListPartLength();	
 		
@@ -99,9 +99,9 @@ public class VDK1FileParser extends AbstractVDKFileParser {
 				
 				//System.out.println(raf.readUnsignedInt(currentOffset, VDK1FilePattern.FILE_OFFSET) + ": " + raf.readString(currentOffset, VDK1FilePattern.FILE_PATH));
 				
-				filePathMap.put(								 
-								raf.readUnsignedInt(currentOffset, VDK1FilePattern.FILE_OFFSET),
-								raf.readString(currentOffset, VDK1FilePattern.FILE_PATH)
+				filePathMap.put(								 								
+								raf.readString(currentOffset, VDK1FilePattern.FILE_PATH),
+								raf.readUnsignedInt(currentOffset, VDK1FilePattern.FILE_OFFSET)
 								);
 				currentOffset += VDK1FilePattern.getPathNameBlockLength();
 			}

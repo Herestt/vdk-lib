@@ -1,19 +1,19 @@
 package com.herestt.ro2.io;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 
 import com.herestt.ro2.vdk.VDK1FilePattern;
 import com.herestt.ro2.vdk.VDKFilePattern;
 import com.sun.org.apache.bcel.internal.util.ByteSequence;
-import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
 
 public class VDKRandomAccessFile extends RandomAccessFile{
 
@@ -142,5 +142,36 @@ public class VDKRandomAccessFile extends RandomAccessFile{
 			result[i] = dataByte[i + shift];
 		
 		write(result, offset, pattern);		
+	}
+	
+	public void writeBoolean(boolean data, long offset, VDK1FilePattern pattern) {
+		write(new byte[]{(byte) (data?1:0)}, offset, pattern);
+	}
+
+	public void writeFileContent(File file, long offset, VDK1FilePattern pattern) {
+		
+		BufferedInputStream bis = null;
+		byte[] buffer = new byte[1024];
+		long shiftOffset = 0;
+		int i;
+		
+		try {
+			bis = new BufferedInputStream(new FileInputStream(file));
+			
+			while((i = bis.read(buffer)) != -1) {
+				
+				seek(offset + pattern.getOffset() +shiftOffset);
+				write(buffer);
+				shiftOffset += i;
+			}
+			
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 }

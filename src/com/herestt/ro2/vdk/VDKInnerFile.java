@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.zip.DeflaterOutputStream;
 import java.util.zip.InflaterInputStream;
 
 import com.herestt.ro2.io.VDKRandomAccessFile;
@@ -25,7 +26,54 @@ public class VDKInnerFile extends VDKInnerDirectory {
 	// Getters and Setters.
 	
 	// Methods.	
-	
+	@Override
+	protected long packChildren(String destination, long parentDirOffset, long nextAddrOffset) {
+		
+		long currentOffset = nextAddrOffset;
+		File compressedFile = null;
+		
+		this.setOffset(currentOffset);
+		compressedFile = compress(new File(this.getSourcePath()));
+		this.setPackedSize(compressedFile.length());
+		if(getNextAddrOffset() == -1)
+			this.setNextAddrOffset(VDK1FilePattern.getFinalDirectoryToken());
+		else
+			this.setNextAddrOffset(currentOffset + VDK1FilePattern.getDirectoryHeaderLength() + compressedFile.length());
+		currentOffset = writeFile(destination, compressedFile, nextAddrOffset);
+		
+		return currentOffset;
+	}	
+
+	private long writeFile(String filePath, File compressedFile, long offset) {
+		
+		VDKRandomAccessFile raf = null;
+		
+		try {
+			raf = new VDKRandomAccessFile(filePath, "rw");
+			
+			raf.writeBoolean(false, offset, VDK1FilePattern.IS_DIRECTORY);
+			raf.writeString(getName(), offset, VDK1FilePattern.NAME);
+			raf.writeUnsignedInt(getRawSize(), offset, VDK1FilePattern.RAW_SIZE);
+			raf.writeUnsignedInt(getPackedSize(), offset, VDK1FilePattern.PACKED_SIZE);
+			raf.writeUnsignedInt(getParentDirOffset(), offset, VDK1FilePattern.PARENT_DIRECTORY);
+			raf.writeUnsignedInt(getNextAddrOffset(), offset, VDK1FilePattern.NEXT_ADDR_OFFSET);
+			raf.writeFileContent(compressedFile, offset, VDK1FilePattern.FILE_CONTENT);
+			
+			raf.close();
+			compressedFile.delete();
+			
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		return (offset + VDK1FilePattern.getDirectoryHeaderLength() + compressedFile.length());
+	}
+
 	public void unpack(String source, String destination) {
 		
 		File content = null;
@@ -58,6 +106,33 @@ public class VDKInnerFile extends VDKInnerDirectory {
 		return tmp;
 	}
 
+	private File compress(File rawFile) {
+		
+		File compressedFile = null;
+		InputStream in = null;
+		OutputStream out = null;
+		
+		try {	
+			
+			compressedFile = File.createTempFile("vdkFileContent", ".tmp");
+			in = new FileInputStream(rawFile);
+			out = new DeflaterOutputStream(new FileOutputStream(compressedFile));
+			
+			shovelIntoOut(in, out);
+			in.close();
+			out.close();
+			
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return compressedFile;
+	}
+	
 	private File decompress(File contentFile, String destination) {
 		
 		File decompressedFile = null;

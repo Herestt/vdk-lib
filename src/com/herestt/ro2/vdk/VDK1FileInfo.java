@@ -16,15 +16,12 @@ public class VDK1FileInfo extends AbstractVDKFileInfo {
 	private long folderCount;						// Amount of folder in the VDK file.
 	private long size;								// VDK file's size.	
 	private long fileListPartLength;				// Trailing file list's size.
-	private Map<Long, String> filePathMap;			// Map holding the trailing file list. <File_Offset, File_Path>.
+	private Map<String, Long> filePathMap;			// Map holding the trailing file list. <File_Path, File_Offset>.
 	private String sourcePath;						// Targeted VDK File's(unpackage)/Directory's(package) source path.
-	
-	
 	
 	public VDK1FileInfo() {
 		super();
 	}
-
 
 	public VDK1FileInfo(String version, long unknown, long fileCount, long folderCount, long size, 
 			long fileListPartSize) {
@@ -37,7 +34,6 @@ public class VDK1FileInfo extends AbstractVDKFileInfo {
 		this.size = size;
 		this.fileListPartLength = fileListPartSize;				
 	}
-
 	
 	// Getters and Setters.	
 
@@ -89,11 +85,11 @@ public class VDK1FileInfo extends AbstractVDKFileInfo {
 		this.fileListPartLength = fileListPartLength;
 	}
 
-	public Map<Long, String> getFilePathMap() {
+	public Map<String, Long> getFilePathMap() {
 		return filePathMap;
 	}
 
-	public void setFilePathMap(Map<Long, String> filePathMap) {
+	public void setFilePathMap(Map<String, Long> filePathMap) {
 		this.filePathMap = filePathMap;
 	}
 	
@@ -115,17 +111,19 @@ public class VDK1FileInfo extends AbstractVDKFileInfo {
 		try {
 			
 			f.createNewFile();
-			destination = f.getAbsolutePath();				
-			size = packChildren(destination, this);					
+			destination = f.getAbsolutePath();
+			writeDirectory(f.getAbsolutePath(), this.getDotDirectory(), VDK1FilePattern.getHeaderLength());
+			size = packChildren(destination, this.getDotDirectory().getOffset(), this.getDotDirectory().getNextAddrOffset());					
 			writeHeader(destination, 0);
 			writeRoot(destination, size);
+			writeFileListerHeader(destination, (size + VDK1FilePattern.getRootLength()));
 			writeFileList(destination, (size + VDK1FilePattern.getRootLength()));
 			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}		
-	}	
+	}
 
 	private void writeHeader(String destination, long offset) {
 		
@@ -156,21 +154,16 @@ public class VDK1FileInfo extends AbstractVDKFileInfo {
 	private void writeRoot(String destination, long offset) {
 		// TODO - Herestt: write file's root.
 		
-	}
-
-	private void writeFileList(String destination, long offset) {
+	}	
+	
+	private void writeFileListerHeader(String destination, long offset) {
 		
 		VDKRandomAccessFile raf = null;
 		
 		try {
-			raf = new VDKRandomAccessFile(destination, "w");
 			
-			for(Map.Entry<Long, String> m : filePathMap.entrySet()) {
-				
-				raf.writeString(m.getValue(), offset, VDK1FilePattern.FILE_PATH);
-//				raf.writeUnsignedInt(m.getKey(), offset, VDK1FilePattern.FILE_OFFSET);				
-				offset += VDK1FilePattern.getPathNameBlockLength();
-			}
+			raf = new VDKRandomAccessFile(destination, "rw");			
+			raf.writeUnsignedInt(fileListPartLength, offset, VDK1FilePattern.FILE_LIST_HEADER);			
 			raf.close();
 			
 		} catch (FileNotFoundException e) {
